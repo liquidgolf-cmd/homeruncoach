@@ -240,11 +240,12 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* Conversations Section */}
-        {conversations.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-semibold">Your Conversations</h2>
-            </div>
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold">Your Conversations</h2>
+            <span className="text-sm text-slate-400">{conversations.length} saved</span>
+          </div>
+          {conversations.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {conversations.map((conversation) => (
                 <Link
@@ -273,8 +274,21 @@ const Dashboard: React.FC = () => {
                 </Link>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center">
+              <p className="text-slate-400 mb-2">No conversations yet</p>
+              <p className="text-sm text-slate-500 mb-4">
+                Start a module chat to begin saving conversations
+              </p>
+              <Link
+                to="/module/story"
+                className="inline-block rounded-full bg-lime-400 px-6 py-2.5 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors"
+              >
+                Start Story Module
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Reports Section */}
         {reports.length > 0 && (
