@@ -162,7 +162,7 @@ const Dashboard: React.FC = () => {
                         </Link>
                       ) : (
                         <Link
-                          to="/module/story"
+                          to={`/module/${!project.modules.story.completed ? 'story' : !project.modules.solution.completed ? 'solution' : 'success'}`}
                           className="flex-1 rounded-full bg-lime-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors text-center"
                         >
                           Continue

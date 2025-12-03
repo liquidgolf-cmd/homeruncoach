@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
+import ModuleChat from './pages/ModuleChat'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -21,6 +22,10 @@ function App() {
                 <Dashboard />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path="/module/:moduleType"
+            element={<ModuleChat />}
           />
         </Routes>
       </Router>
