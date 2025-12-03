@@ -20,7 +20,7 @@ export const useAICoach = ({ moduleType, conversationId, onPhaseChange, onComple
   const [answers, setAnswers] = useState<Record<string, string>>({})
 
   // Mock AI response - in production, this would call an actual API
-  const generateAIResponse = async (userMessage: string): Promise<string> => {
+  const generateAIResponse = async (_userMessage: string): Promise<string> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000))
 
@@ -40,14 +40,22 @@ Take your time with this—there's no rush.`
     if (currentPhase === 'questions') {
       const nextQ = questions[questionIndex + 1]
 
-      // Paraphrase user's answer
-      const paraphrase = `What I hear you saying is: "${userMessage}". That's helpful context.`
+      // Natural, conversational transitions
+      const transitions = [
+        'Got it.',
+        'That makes sense.',
+        'I see.',
+        'Helpful context.',
+        'Thanks for sharing that.',
+        'Understood.',
+      ]
+      const transition = transitions[Math.floor(Math.random() * transitions.length)]
 
       if (nextQ) {
-        return `${paraphrase}\n\nNow, let's dig a bit deeper:\n\n${nextQ}`
+        return `${transition}\n\n${nextQ}`
       } else {
         // Move to draft phase
-        return `${paraphrase}\n\nExcellent! I have enough information to create a draft for you. Let me synthesize everything we've discussed...`
+        return `${transition}\n\nPerfect! I have everything I need. Let me pull together a draft based on what you've shared...`
       }
     }
 
