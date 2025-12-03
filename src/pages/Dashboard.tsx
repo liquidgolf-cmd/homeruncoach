@@ -1,14 +1,18 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { Report } from '../types/report'
+import { getReportsByProject } from '../utils/reportStorage'
+import ReportCard from '../components/ReportCard'
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth()
+  const [reports, setReports] = useState<Report[]>([])
 
   // Mock data - will be replaced with real data from backend
   const projects = [
     {
-      id: '1',
+      id: 'project_1',
       name: 'My First Business',
       createdAt: '2024-01-15',
       modules: {
@@ -18,6 +22,16 @@ const Dashboard: React.FC = () => {
       },
     },
   ]
+
+  useEffect(() => {
+    // Load reports for all projects
+    const allReports: Report[] = []
+    projects.forEach(project => {
+      const projectReports = getReportsByProject(project.id)
+      allReports.push(...projectReports)
+    })
+    setReports(allReports)
+  }, [])
 
   const completedModules = projects.reduce((acc, project) => {
     return acc + Object.values(project.modules).filter((m) => m.completed).length
@@ -175,6 +189,22 @@ const Dashboard: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Reports Section */}
+        {reports.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Your Reports</h2>
+            <div className="grid gap-6 md:grid-cols-3">
+              {reports.map((report) => (
+                <ReportCard
+                  key={report.id}
+                  report={report}
+                  onView={() => window.location.href = `/report/${report.id}`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Quick Start Section */}
         <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/60 to-slate-800/40 p-8">

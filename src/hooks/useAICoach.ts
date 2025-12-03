@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react'
 import { Message, ModuleType, ModulePhase, Conversation } from '../types/module'
 import { getWarmupPrompt, getModuleQuestions, getDraftPrompt, getReflectionPrompt } from '../utils/prompts'
 import { COACHING_SYSTEM_PROMPT, getModuleRole } from '../utils/coachingQualities'
+import { generateReport } from '../utils/reportGenerator'
+import { saveReport } from '../utils/reportStorage'
 
 interface UseAICoachProps {
   moduleType: ModuleType
@@ -155,11 +157,34 @@ What would you like to change or refine?`
     setAnswers({})
   }, [moduleType])
 
-  const completeModule = useCallback(() => {
+  const completeModule = useCallback((projectId: string) => {
     setCurrentPhase('review')
     onPhaseChange?.('review')
+    
+    // Generate and save report
+    const conversation: Conversation = {
+      id: conversationId || `conv_${Date.now()}`,
+      moduleType,
+      projectId,
+      messages,
+      currentPhase: 'review',
+      phaseData: {
+        questions: {
+          currentQuestionIndex: questionIndex,
+          answers,
+          completed: true,
+        },
+      },
+      completed: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    
+    const report = generateReport(conversation, projectId)
+    saveReport(report)
+    
     onComplete?.()
-  }, [onPhaseChange, onComplete])
+  }, [conversationId, moduleType, messages, questionIndex, answers, onPhaseChange, onComplete])
 
   return {
     messages,

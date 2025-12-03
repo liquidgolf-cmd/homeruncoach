@@ -6,6 +6,7 @@ import ChatInterface from '../components/ChatInterface'
 import { useAICoach } from '../hooks/useAICoach'
 import { ModuleType, ModulePhase } from '../types/module'
 import { getModuleRole, getModuleDescription } from '../utils/coachingQualities'
+import { getReportsByProject } from '../utils/reportStorage'
 
 const ModuleChat: React.FC = () => {
   const { moduleType } = useParams<{ moduleType: string }>()
@@ -19,6 +20,9 @@ const ModuleChat: React.FC = () => {
     ? (moduleType as ModuleType)
     : 'story'
 
+  // Mock project ID - in production, get from route or context
+  const projectId = 'project_1'
+
   const {
     messages,
     currentPhase,
@@ -28,14 +32,23 @@ const ModuleChat: React.FC = () => {
     completeModule,
   } = useAICoach({
     moduleType: currentModule,
+    conversationId: `conv_${currentModule}_${projectId}`,
     onPhaseChange: (newPhase) => {
       setPhase(newPhase)
     },
     onComplete: () => {
-      // Handle module completion
-      console.log('Module completed!')
+      // Module completed, report generated
+      const reports = getReportsByProject(projectId)
+      const latestReport = reports.find(r => r.moduleType === currentModule)
+      if (latestReport) {
+        // Could navigate to report viewer or show success message
+      }
     },
   })
+
+  const handleComplete = () => {
+    completeModule(projectId)
+  }
 
   useEffect(() => {
     initializeConversation()
@@ -121,12 +134,21 @@ const ModuleChat: React.FC = () => {
             {currentPhase === 'review' && (
               <div className="mt-6 p-4 rounded-lg bg-lime-400/10 border border-lime-400/30">
                 <p className="text-xs text-lime-300 mb-2">Module Complete!</p>
-                <Link
-                  to="/dashboard"
-                  className="text-xs text-lime-300 hover:text-lime-200 underline"
-                >
-                  Return to Dashboard
-                </Link>
+                <p className="text-xs text-slate-400 mb-3">Your report has been generated. View it from your dashboard.</p>
+                <div className="flex gap-2">
+                  <Link
+                    to="/dashboard"
+                    className="text-xs text-lime-300 hover:text-lime-200 underline"
+                  >
+                    Return to Dashboard
+                  </Link>
+                  <button
+                    onClick={handleComplete}
+                    className="text-xs text-lime-300 hover:text-lime-200 underline"
+                  >
+                    Generate Report
+                  </button>
+                </div>
               </div>
             )}
           </aside>

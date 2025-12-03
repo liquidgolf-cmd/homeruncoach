@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
 import ModuleChat from './pages/ModuleChat'
+import ReportViewer from './pages/ReportViewer'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -26,6 +27,10 @@ function App() {
           <Route
             path="/module/:moduleType"
             element={<ModuleChat />}
+          />
+          <Route
+            path="/report/:reportId"
+            element={<ReportViewer />}
           />
         </Routes>
       </Router>
