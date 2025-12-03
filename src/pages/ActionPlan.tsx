@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useParams, Link } from 'react-router-dom'
 import ProtectedRoute from '../components/ProtectedRoute'
 import { BusinessActionPlan } from '../types/report'
 import { getBusinessActionPlanByProject, getBusinessActionPlan } from '../utils/reportStorage'
@@ -8,8 +7,6 @@ import { generateActionPlanPDFText, downloadTextFile } from '../utils/pdfGenerat
 
 const ActionPlan: React.FC = () => {
   const { planId, projectId } = useParams<{ planId?: string; projectId?: string }>()
-  const navigate = useNavigate()
-  const { user } = useAuth()
   const [plan, setPlan] = useState<BusinessActionPlan | null>(null)
 
   useEffect(() => {
@@ -130,7 +127,7 @@ const ActionPlan: React.FC = () => {
                     {plan.story.idealClientProfile.situation && (
                       <p><strong>Situation:</strong> {plan.story.idealClientProfile.situation}</p>
                     )}
-                    {plan.story.idealClientProfile.pains?.length > 0 && (
+                    {plan.story.idealClientProfile.pains && plan.story.idealClientProfile.pains.length > 0 && (
                       <div>
                         <strong>Pains:</strong>
                         <ul className="list-disc list-inside ml-4">
@@ -140,7 +137,7 @@ const ActionPlan: React.FC = () => {
                         </ul>
                       </div>
                     )}
-                    {plan.story.idealClientProfile.desires?.length > 0 && (
+                    {plan.story.idealClientProfile.desires && plan.story.idealClientProfile.desires.length > 0 && (
                       <div>
                         <strong>Desires:</strong>
                         <ul className="list-disc list-inside ml-4">

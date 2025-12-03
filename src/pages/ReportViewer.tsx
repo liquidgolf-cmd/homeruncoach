@@ -1,14 +1,11 @@
 import React from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useParams, Link } from 'react-router-dom'
 import ProtectedRoute from '../components/ProtectedRoute'
 import { Report } from '../types/report'
 import { generatePDFText, downloadTextFile } from '../utils/pdfGenerator'
 
 const ReportViewer: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>()
-  const navigate = useNavigate()
-  const { user } = useAuth()
 
   // In production, fetch report from API
   // For now, we'll use localStorage

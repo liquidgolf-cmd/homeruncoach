@@ -68,8 +68,6 @@ export const getModuleQuestions = (moduleType: ModuleType): string[] => {
 }
 
 export const getDraftPrompt = (moduleType: ModuleType, answers: Record<string, string>): string => {
-  const role = getModuleRole(moduleType)
-
   const draftPrompts = {
     story: `Based on our conversation, I'm going to draft your Brand Story and Ideal Client Profile. Let me synthesize what you've shared:
 

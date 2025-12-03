@@ -8,7 +8,7 @@ export const generateReport = (
   conversation: Conversation,
   projectId: string
 ): Report => {
-  const { moduleType, messages, phaseData } = conversation
+  const { moduleType, phaseData } = conversation
 
   // Extract answers from conversation
   const answers = phaseData.questions?.answers || {}
@@ -17,13 +17,13 @@ export const generateReport = (
 
   switch (moduleType) {
     case 'story':
-      content = generateStoryReport(answers, messages)
+      content = generateStoryReport(answers)
       break
     case 'solution':
-      content = generateSolutionReport(answers, messages)
+      content = generateSolutionReport(answers)
       break
     case 'success':
-      content = generateSuccessReport(answers, messages)
+      content = generateSuccessReport(answers)
       break
   }
 
@@ -37,8 +37,7 @@ export const generateReport = (
 }
 
 const generateStoryReport = (
-  answers: Record<string, string>,
-  messages: any[]
+  answers: Record<string, string>
 ): StoryReportContent => {
   // Extract key information from answers and messages
   const whyAnswer = answers.q0 || answers.q1 || answers.q2 || 'Not specified'
@@ -60,12 +59,9 @@ const generateStoryReport = (
 }
 
 const generateSolutionReport = (
-  answers: Record<string, string>,
-  messages: any[]
+  answers: Record<string, string>
 ): SolutionReportContent => {
   const whatAnswer = answers.q0 || answers.q1 || answers.q2 || 'Not specified'
-  const howAnswer = answers.q3 || answers.q4 || answers.q5 || 'Not specified'
-  const journeyAnswer = answers.q6 || answers.q7 || answers.q8 || 'Not specified'
 
   return {
     valueProposition: `We help [WHO] get [DESIRED RESULT] by [YOUR APPROACH], so they can [DEEPER BENEFIT].`,
@@ -101,12 +97,9 @@ const generateSolutionReport = (
 }
 
 const generateSuccessReport = (
-  answers: Record<string, string>,
-  messages: any[]
+  answers: Record<string, string>
 ): SuccessReportContent => {
   const outcomeAnswer = answers.q0 || answers.q1 || answers.q2 || 'Not specified'
-  const metricsAnswer = answers.q3 || answers.q4 || answers.q5 || 'Not specified'
-  const planAnswer = answers.q6 || answers.q7 || 'Not specified'
 
   return {
     homeRunOutcome: `For your ideal client, a home run looks like: ${outcomeAnswer}`,

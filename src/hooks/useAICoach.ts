@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { Message, ModuleType, ModulePhase, Conversation } from '../types/module'
-import { getWarmupPrompt, getModuleQuestions, getDraftPrompt, getReflectionPrompt } from '../utils/prompts'
-import { COACHING_SYSTEM_PROMPT, getModuleRole } from '../utils/coachingQualities'
+import { getWarmupPrompt, getModuleQuestions } from '../utils/prompts'
+import { getModuleRole } from '../utils/coachingQualities'
 import { generateReport } from '../utils/reportGenerator'
 import { saveReport } from '../utils/reportStorage'
 
@@ -18,10 +18,9 @@ export const useAICoach = ({ moduleType, conversationId, onPhaseChange, onComple
   const [isLoading, setIsLoading] = useState(false)
   const [questionIndex, setQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [conversation, setConversation] = useState<Conversation | null>(null)
 
   // Mock AI response - in production, this would call an actual API
-  const generateAIResponse = async (userMessage: string, context: Message[]): Promise<string> => {
+  const generateAIResponse = async (userMessage: string): Promise<string> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000))
 
@@ -39,7 +38,6 @@ Take your time with this—there's no rush.`
     }
 
     if (currentPhase === 'questions') {
-      const currentQ = questions[questionIndex]
       const nextQ = questions[questionIndex + 1]
 
       // Paraphrase user's answer
@@ -85,14 +83,13 @@ What would you like to change or refine?`
 
     // Update answers if in questions phase
     if (currentPhase === 'questions') {
-      const questions = getModuleQuestions(moduleType)
       const questionKey = `q${questionIndex}`
       setAnswers(prev => ({ ...prev, [questionKey]: content }))
     }
 
     try {
       // Generate AI response
-      const aiResponse = await generateAIResponse(content, [...messages, userMessage])
+      const aiResponse = await generateAIResponse(content)
 
       const aiMessage: Message = {
         id: `msg_${Date.now() + 1}`,
@@ -193,7 +190,6 @@ What would you like to change or refine?`
     sendMessage,
     initializeConversation,
     completeModule,
-    conversation,
   }
 }
 

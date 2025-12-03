@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import React, { useEffect } from 'react'
+import { useParams, Link } from 'react-router-dom'
 import ProtectedRoute from '../components/ProtectedRoute'
 import ChatInterface from '../components/ChatInterface'
 import { useAICoach } from '../hooks/useAICoach'
@@ -10,9 +9,6 @@ import { getReportsByProject } from '../utils/reportStorage'
 
 const ModuleChat: React.FC = () => {
   const { moduleType } = useParams<{ moduleType: string }>()
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const [phase, setPhase] = useState<ModulePhase>('warmup')
 
   // Validate module type
   const validModuleTypes: ModuleType[] = ['story', 'solution', 'success']
@@ -33,8 +29,8 @@ const ModuleChat: React.FC = () => {
   } = useAICoach({
     moduleType: currentModule,
     conversationId: `conv_${currentModule}_${projectId}`,
-    onPhaseChange: (newPhase) => {
-      setPhase(newPhase)
+    onPhaseChange: () => {
+      // Phase change handled internally
     },
     onComplete: () => {
       // Module completed, report generated
