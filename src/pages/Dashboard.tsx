@@ -6,11 +6,14 @@ import { getReportsByProject, getBusinessActionPlanByProject } from '../utils/re
 import { compileBusinessActionPlan } from '../utils/reportGenerator'
 import { saveBusinessActionPlan } from '../utils/reportStorage'
 import ReportCard from '../components/ReportCard'
+import { getAllConversations } from '../utils/conversationStorage'
+import { Conversation } from '../types/module'
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth()
   const [reports, setReports] = useState<Report[]>([])
   const [actionPlan, setActionPlan] = useState<BusinessActionPlan | null>(null)
+  const [conversations, setConversations] = useState<Conversation[]>([])
 
   // Mock data - will be replaced with real data from backend
   const projects = [
@@ -50,6 +53,10 @@ const Dashboard: React.FC = () => {
       }
     })
     setReports(allReports)
+    
+    // Load conversations
+    const allConversations = getAllConversations()
+    setConversations(allConversations)
   }, [])
 
   const completedModules = projects.reduce((acc, project) => {
@@ -229,6 +236,43 @@ const Dashboard: React.FC = () => {
             <p className="text-slate-300 text-sm">
               {actionPlan.cover.overview}
             </p>
+          </div>
+        )}
+
+        {/* Conversations Section */}
+        {conversations.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold">Your Conversations</h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {conversations.map((conversation) => (
+                <Link
+                  key={conversation.id}
+                  to={`/conversation/${conversation.id}`}
+                  className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 hover:border-lime-400/50 transition-colors"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h3 className="text-sm font-semibold text-lime-300 mb-1">
+                        {conversation.moduleType.charAt(0).toUpperCase() + conversation.moduleType.slice(1)} Module
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        {conversation.messages.length} messages
+                      </p>
+                    </div>
+                    {conversation.completed && (
+                      <span className="rounded-full bg-lime-400/20 px-2 py-1 text-xs font-semibold text-lime-300">
+                        Complete
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-2">
+                    {new Date(conversation.updatedAt).toLocaleDateString()}
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 

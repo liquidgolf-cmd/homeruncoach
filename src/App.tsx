@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import ModuleChat from './pages/ModuleChat'
 import ReportViewer from './pages/ReportViewer'
 import ActionPlan from './pages/ActionPlan'
+import ConversationViewer from './pages/ConversationViewer'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -40,6 +41,10 @@ function App() {
           <Route
             path="/action-plan/project/:projectId"
             element={<ActionPlan />}
+          />
+          <Route
+            path="/conversation/:conversationId"
+            element={<ConversationViewer />}
           />
         </Routes>
       </Router>

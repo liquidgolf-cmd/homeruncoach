@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react'
 import { Message, ModuleType, ModulePhase, Conversation } from '../types/module'
-import { getModuleQuestions } from '../utils/prompts'
+import { getModuleQuestions, getDraftPrompt } from '../utils/prompts'
 import { generateReport } from '../utils/reportGenerator'
 import { saveReport } from '../utils/reportStorage'
 import { generateClaudeResponse, isAPIKeyConfigured } from '../api/claude'
+import { saveConversation } from '../utils/conversationStorage'
 
 interface UseAICoachProps {
   moduleType: ModuleType
@@ -18,6 +19,43 @@ export const useAICoach = ({ moduleType, conversationId, onPhaseChange, onComple
   const [isLoading, setIsLoading] = useState(false)
   const [questionIndex, setQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
+  
+  // Mock project ID - in production, get from route or context
+  const projectId = 'project_1'
+
+  // Generate draft using Claude API
+  const generateDraft = async (allMessages: Message[]): Promise<string> => {
+    const hasAPIKey = isAPIKeyConfigured()
+    
+    if (hasAPIKey) {
+      try {
+        // Create a draft generation prompt
+        const draftPrompt = getDraftPrompt(moduleType, answers)
+        const draftRequestMessage: Message = {
+          id: `msg_draft_request_${Date.now()}`,
+          role: 'user',
+          content: `${draftPrompt}\n\nPlease create a comprehensive draft based on all the answers provided. Structure it clearly and make it actionable.`,
+          timestamp: new Date().toISOString(),
+          phase: 'draft',
+        }
+        
+        const draftMessages = [...allMessages, draftRequestMessage]
+        const model = import.meta.env.VITE_CLAUDE_MODEL || 'claude-3-5-sonnet-20241022'
+        
+        return await generateClaudeResponse(draftMessages, moduleType, model)
+      } catch (error) {
+        console.error('Error generating draft:', error)
+        // Fall through to mock draft
+      }
+    }
+    
+    // Fallback mock draft
+    return `Here's a draft based on our conversation. Please review it and let me know what you'd like to adjust:
+
+[This is where the AI-generated draft would appear. In production, this would be generated using the answers collected during the questions phase.]
+
+What would you like to change or refine?`
+  }
 
   // Generate AI response using Claude API or fallback to mock
   const generateAIResponse = async (userMessage: string): Promise<string> => {
@@ -121,14 +159,78 @@ What would you like to change or refine?`
 
       setMessages(prev => [...prev, aiMessage])
 
+      // Save conversation after each message
+      const updatedMessages = [...messages, userMessage, aiMessage]
+      if (conversationId) {
+        const conversation: Conversation = {
+          id: conversationId,
+          moduleType,
+          projectId,
+          messages: updatedMessages,
+          currentPhase,
+          phaseData: {
+            questions: currentPhase === 'questions' ? {
+              currentQuestionIndex: questionIndex,
+              answers,
+              completed: false,
+            } : undefined,
+          },
+          completed: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+        saveConversation(conversation)
+      }
+
       // Handle phase transitions
       if (currentPhase === 'questions') {
         const questions = getModuleQuestions(moduleType)
         if (questionIndex < questions.length - 1) {
           setQuestionIndex(prev => prev + 1)
         } else {
+          // All questions answered - generate draft
           setCurrentPhase('draft')
           onPhaseChange?.('draft')
+          
+          // Generate draft
+          setIsLoading(true)
+          try {
+            const draftContent = await generateDraft(updatedMessages)
+            const draftMessage: Message = {
+              id: `msg_draft_${Date.now()}`,
+              role: 'assistant',
+              content: draftContent,
+              timestamp: new Date().toISOString(),
+              phase: 'draft',
+            }
+            setMessages(prev => [...prev, draftMessage])
+            
+            // Save conversation with draft
+            if (conversationId) {
+              const conversation: Conversation = {
+                id: conversationId,
+                moduleType,
+                projectId,
+                messages: [...updatedMessages, draftMessage],
+                currentPhase: 'draft',
+                phaseData: {
+                  questions: {
+                    currentQuestionIndex: questionIndex,
+                    answers,
+                    completed: true,
+                  },
+                },
+                completed: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              }
+              saveConversation(conversation)
+            }
+          } catch (error) {
+            console.error('Error generating draft:', error)
+          } finally {
+            setIsLoading(false)
+          }
         }
       }
     } catch (error) {
@@ -144,7 +246,7 @@ What would you like to change or refine?`
     } finally {
       setIsLoading(false)
     }
-  }, [moduleType, currentPhase, questionIndex, messages, isLoading, onPhaseChange])
+    }, [moduleType, currentPhase, questionIndex, messages, isLoading, onPhaseChange, conversationId, projectId, answers])
 
   const initializeConversation = useCallback(() => {
     const questions = getModuleQuestions(moduleType)

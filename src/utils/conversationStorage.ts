@@ -97,3 +97,25 @@ export const addMessageToConversation = (
   return updated
 }
 
+export const getAllConversations = (projectId?: string): Conversation[] => {
+  const conversations: Conversation[] = []
+  
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key?.startsWith(STORAGE_PREFIX)) {
+      try {
+        const conversation = JSON.parse(localStorage.getItem(key) || '{}') as Conversation
+        if (!projectId || conversation.projectId === projectId) {
+          conversations.push(conversation)
+        }
+      } catch {
+        // Skip invalid entries
+      }
+    }
+  }
+  
+  return conversations.sort((a, b) => 
+    new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  )
+}
+
