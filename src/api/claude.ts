@@ -8,8 +8,19 @@ import { ModuleType } from '../types/module'
 const getAnthropicClient = (): Anthropic => {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
   
+  console.log('🔑 Checking API key:', {
+    exists: !!apiKey,
+    length: apiKey?.length || 0,
+    prefix: apiKey ? apiKey.substring(0, 15) + '...' : 'none'
+  })
+  
   if (!apiKey) {
-    throw new Error('VITE_ANTHROPIC_API_KEY is not set. Please add it to your .env file.')
+    throw new Error('VITE_ANTHROPIC_API_KEY is not set. Please add it to your .env file and restart the dev server.')
+  }
+  
+  // Validate API key format
+  if (!apiKey.startsWith('sk-ant-api03-') && !apiKey.startsWith('ysk-ant-api03-')) {
+    console.warn('⚠️ API key format may be incorrect. Expected format: sk-ant-api03-...')
   }
   
   return new Anthropic({
@@ -68,19 +79,22 @@ Remember to stay in character as a ${role} and guide the user through the ${modu
 export const generateClaudeResponse = async (
   messages: Message[],
   moduleType: ModuleType,
-  model: string = 'claude-3-5-sonnet-20241022'
+  model: string = 'claude-sonnet-4-5'
 ): Promise<string> => {
   try {
+    console.log('🚀 Starting Claude API call with model:', model)
     const client = getAnthropicClient()
     const systemPrompt = getModuleSystemPrompt(moduleType)
     const conversationMessages = convertMessages(messages)
     
+    console.log('📤 Sending request to Claude API...')
     const response = await client.messages.create({
       model,
       max_tokens: 2048,
       system: systemPrompt,
       messages: conversationMessages,
     })
+    console.log('✅ Received response from Claude API')
     
     // Extract text content from response
     const textContent = response.content.find(
@@ -93,21 +107,30 @@ export const generateClaudeResponse = async (
     
     return textContent.text
   } catch (error) {
-    console.error('Error calling Claude API:', error)
+    console.error('❌ Error calling Claude API:', error)
     
     if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      })
+      
       if (error.message.includes('VITE_ANTHROPIC_API_KEY')) {
-        throw new Error('API key not configured. Please set VITE_ANTHROPIC_API_KEY in your .env file.')
+        throw new Error('API key not configured. Please set VITE_ANTHROPIC_API_KEY in your .env file and restart the dev server.')
       }
-      if (error.message.includes('401') || error.message.includes('authentication')) {
-        throw new Error('Invalid API key. Please check your VITE_ANTHROPIC_API_KEY.')
+      if (error.message.includes('401') || error.message.includes('authentication') || error.message.includes('invalid')) {
+        throw new Error('Invalid API key. Please check your VITE_ANTHROPIC_API_KEY. Keys should start with "sk-ant-api03-".')
       }
       if (error.message.includes('429')) {
         throw new Error('Rate limit exceeded. Please try again in a moment.')
       }
+      if (error.message.includes('model')) {
+        throw new Error(`Model error: ${error.message}. Check that the model name "${model}" is correct.`)
+      }
     }
     
-    throw new Error('Failed to generate response. Please try again.')
+    throw new Error(`Failed to generate response: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 

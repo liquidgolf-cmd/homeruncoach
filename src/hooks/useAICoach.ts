@@ -70,7 +70,7 @@ Please synthesize all the information from our conversation into a well-structur
         }
         
         const draftMessages = [...allMessages, draftRequestMessage]
-        const model = import.meta.env.VITE_CLAUDE_MODEL || 'claude-3-5-sonnet-20241022'
+        const model = import.meta.env.VITE_CLAUDE_MODEL || 'claude-sonnet-4-5'
         
         return await generateClaudeResponse(draftMessages, moduleType, model)
       } catch (error) {
@@ -102,6 +102,14 @@ What would you like to change or refine?`
   // Generate AI response using Claude API or fallback to mock
   const generateAIResponse = async (userMessage: string): Promise<string> => {
     const hasAPIKey = isAPIKeyConfigured()
+    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
+    
+    console.log('🔑 API Key Check:', {
+      configured: hasAPIKey,
+      keyPresent: !!apiKey,
+      keyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'none',
+      model: import.meta.env.VITE_CLAUDE_MODEL || 'not set'
+    })
     
     // If API key is configured, use Claude API
     if (hasAPIKey) {
@@ -115,15 +123,22 @@ What would you like to change or refine?`
           phase: currentPhase,
         }]
         
-        // Use model from environment variable or default to Sonnet 3.5
-        // Update to Sonnet 4/4.5 when available: claude-sonnet-4-20250514 or claude-sonnet-4-5-20250514
-        const model = import.meta.env.VITE_CLAUDE_MODEL || 'claude-3-5-sonnet-20241022'
+        // Use model from environment variable or default to Sonnet 4.5
+        const model = import.meta.env.VITE_CLAUDE_MODEL || 'claude-sonnet-4-5'
         
-        return await generateClaudeResponse(allMessages, moduleType, model)
+        console.log('🤖 Calling Claude API with model:', model)
+        const response = await generateClaudeResponse(allMessages, moduleType, model)
+        console.log('✅ Claude API response received')
+        return response
       } catch (error) {
-        console.error('Claude API error:', error)
+        console.error('❌ Claude API error:', error)
+        if (error instanceof Error) {
+          console.error('Error message:', error.message)
+        }
         // Fall through to mock response if API fails
       }
+    } else {
+      console.warn('⚠️ API key not configured - using mock responses')
     }
     
     // Fallback to mock responses if API key not configured or API fails
