@@ -15,55 +15,53 @@ const Dashboard: React.FC = () => {
   const [actionPlan, setActionPlan] = useState<BusinessActionPlan | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([])
 
-  // Mock data - will be replaced with real data from backend
-  const projects = [
-    {
-      id: 'project_1',
-      name: 'My First Business',
-      createdAt: '2024-01-15',
-      modules: {
-        story: { completed: true, completedAt: '2024-01-16' },
-        solution: { completed: false, completedAt: null },
-        success: { completed: false, completedAt: null },
-      },
-    },
-  ]
+  // Mock project - in production, get from backend
+  const projectId = 'project_1'
+  const project = {
+    id: projectId,
+    name: 'My First Business',
+    createdAt: '2024-01-15',
+  }
 
   useEffect(() => {
-    // Load reports for all projects
-    const allReports: Report[] = []
-    projects.forEach(project => {
-      const projectReports = getReportsByProject(project.id)
-      allReports.push(...projectReports)
-      
-      // Check if all three modules are complete and compile action plan
-      const storyReport = projectReports.find(r => r.moduleType === 'story')
-      const solutionReport = projectReports.find(r => r.moduleType === 'solution')
-      const successReport = projectReports.find(r => r.moduleType === 'success')
-      
-      if (storyReport && solutionReport && successReport) {
-        // Check if plan already exists
-        let plan = getBusinessActionPlanByProject(project.id)
-        if (!plan) {
-          // Compile new plan
-          plan = compileBusinessActionPlan(storyReport, solutionReport, successReport, project.id)
-          saveBusinessActionPlan(plan)
-        }
-        setActionPlan(plan)
+    // Load reports for the project
+    const projectReports = getReportsByProject(projectId)
+    setReports(projectReports)
+    
+    // Check if all three modules are complete and compile action plan
+    const storyReport = projectReports.find(r => r.moduleType === 'story')
+    const solutionReport = projectReports.find(r => r.moduleType === 'solution')
+    const successReport = projectReports.find(r => r.moduleType === 'success')
+    
+    if (storyReport && solutionReport && successReport) {
+      // Check if plan already exists
+      let plan = getBusinessActionPlanByProject(projectId)
+      if (!plan) {
+        // Compile new plan
+        plan = compileBusinessActionPlan(storyReport, solutionReport, successReport, projectId)
+        saveBusinessActionPlan(plan)
       }
-    })
-    setReports(allReports)
+      setActionPlan(plan)
+    }
     
     // Load conversations
-    const allConversations = getAllConversations()
+    const allConversations = getAllConversations(projectId)
     setConversations(allConversations)
   }, [])
 
-  const completedModules = projects.reduce((acc, project) => {
-    return acc + Object.values(project.modules).filter((m) => m.completed).length
-  }, 0)
-
-  const totalModules = projects.length * 3
+  // Determine module completion based on actual reports
+  const storyReport = reports.find(r => r.moduleType === 'story')
+  const solutionReport = reports.find(r => r.moduleType === 'solution')
+  const successReport = reports.find(r => r.moduleType === 'success')
+  
+  const moduleStatus = {
+    story: { completed: !!storyReport, completedAt: storyReport?.generatedAt || null, reportId: storyReport?.id },
+    solution: { completed: !!solutionReport, completedAt: solutionReport?.generatedAt || null, reportId: solutionReport?.id },
+    success: { completed: !!successReport, completedAt: successReport?.generatedAt || null, reportId: successReport?.id },
+  }
+  
+  const completedModules = Object.values(moduleStatus).filter((m) => m.completed).length
+  const totalModules = 3
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50">
@@ -103,7 +101,7 @@ const Dashboard: React.FC = () => {
         <div className="grid gap-6 md:grid-cols-3 mb-8">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
             <div className="text-sm text-slate-400 mb-1">Active Projects</div>
-            <div className="text-3xl font-bold">{projects.length}</div>
+            <div className="text-3xl font-bold">1</div>
           </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
             <div className="text-sm text-slate-400 mb-1">Completed Modules</div>
@@ -126,94 +124,85 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
 
-          {projects.length === 0 ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-12 text-center">
-              <p className="text-slate-400 mb-4">You don't have any projects yet.</p>
-              <button className="rounded-full bg-lime-400 px-6 py-2.5 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors">
-                Create Your First Project
-              </button>
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2">
-              {projects.map((project) => {
-                const moduleProgress = Object.values(project.modules).filter((m) => m.completed)
-                  .length
-                const isComplete = moduleProgress === 3
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">{project.name}</h3>
+                  <p className="text-xs text-slate-400">
+                    Created {new Date(project.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                {completedModules === 3 && (
+                  <span className="rounded-full bg-lime-400/20 px-2 py-1 text-xs font-semibold text-lime-300">
+                    Complete
+                  </span>
+                )}
+              </div>
 
-                return (
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+                  <span>Progress</span>
+                  <span>
+                    {completedModules} / 3 modules
+                  </span>
+                </div>
+                <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                   <div
-                    key={project.id}
-                    className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6"
+                    className="h-full bg-lime-400 transition-all"
+                    style={{ width: `${(completedModules / 3) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {(['story', 'solution', 'success'] as const).map((moduleType) => {
+                  const module = moduleStatus[moduleType]
+                  return (
+                    <Link
+                      key={moduleType}
+                      to={module.completed && module.reportId ? `/report/${module.reportId}` : `/module/${moduleType}`}
+                      className={`rounded-lg p-2 text-center text-xs transition-colors ${
+                        module.completed
+                          ? 'bg-lime-400/20 text-lime-300 hover:bg-lime-400/30'
+                          : 'bg-slate-800/50 text-slate-400 hover:bg-slate-800/70'
+                      }`}
+                    >
+                      {moduleType.charAt(0).toUpperCase() + moduleType.slice(1)}
+                      {module.completed && ' ✓'}
+                    </Link>
+                  )
+                })}
+              </div>
+
+              <div className="flex gap-2">
+                {completedModules === 3 ? (
+                  actionPlan ? (
+                    <Link
+                      to={`/action-plan/${actionPlan.id}`}
+                      className="flex-1 rounded-full bg-lime-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors text-center"
+                    >
+                      View Action Plan
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/action-plan"
+                      className="flex-1 rounded-full bg-lime-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors text-center"
+                    >
+                      View Action Plan
+                    </Link>
+                  )
+                ) : (
+                  <Link
+                    to={`/module/${!moduleStatus.story.completed ? 'story' : !moduleStatus.solution.completed ? 'solution' : 'success'}`}
+                    className="flex-1 rounded-full bg-lime-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors text-center"
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold mb-1">{project.name}</h3>
-                        <p className="text-xs text-slate-400">
-                          Created {new Date(project.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      {isComplete && (
-                        <span className="rounded-full bg-lime-400/20 px-2 py-1 text-xs font-semibold text-lime-300">
-                          Complete
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                        <span>Progress</span>
-                        <span>
-                          {moduleProgress} / 3 modules
-                        </span>
-                      </div>
-                      <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-lime-400 transition-all"
-                          style={{ width: `${(moduleProgress / 3) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 mb-4">
-                      {['story', 'solution', 'success'].map((moduleType) => {
-                        const module = project.modules[moduleType as keyof typeof project.modules]
-                        return (
-                          <div
-                            key={moduleType}
-                            className={`rounded-lg p-2 text-center text-xs ${
-                              module.completed
-                                ? 'bg-lime-400/20 text-lime-300'
-                                : 'bg-slate-800/50 text-slate-400'
-                            }`}
-                          >
-                            {moduleType.charAt(0).toUpperCase() + moduleType.slice(1)}
-                          </div>
-                        )
-                      })}
-                    </div>
-
-                    <div className="flex gap-2">
-                      {isComplete ? (
-                        <Link
-                          to="/action-plan"
-                          className="flex-1 rounded-full bg-lime-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors text-center"
-                        >
-                          View Action Plan
-                        </Link>
-                      ) : (
-                        <Link
-                          to={`/module/${!project.modules.story.completed ? 'story' : !project.modules.solution.completed ? 'solution' : 'success'}`}
-                          className="flex-1 rounded-full bg-lime-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors text-center"
-                        >
-                          Continue
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
+                    Continue
+                  </Link>
+                )}
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Business Action Plan Section */}
@@ -299,7 +288,6 @@ const Dashboard: React.FC = () => {
                 <ReportCard
                   key={report.id}
                   report={report}
-                  onView={() => window.location.href = `/report/${report.id}`}
                 />
               ))}
             </div>

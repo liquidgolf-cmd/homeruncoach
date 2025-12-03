@@ -1,13 +1,13 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { Report } from '../types/report'
 import { generatePDFText, downloadTextFile } from '../utils/pdfGenerator'
 
 interface ReportCardProps {
   report: Report
-  onView?: () => void
 }
 
-const ReportCard: React.FC<ReportCardProps> = ({ report, onView }) => {
+const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
   const getReportTitle = () => {
     const titles = {
       story: 'Story Report',
@@ -54,14 +54,12 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onView }) => {
       </div>
 
       <div className="flex gap-2">
-        {onView && (
-          <button
-            onClick={onView}
-            className="flex-1 rounded-lg bg-lime-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors"
-          >
-            View
-          </button>
-        )}
+        <Link
+          to={`/report/${report.id}`}
+          className="flex-1 rounded-lg bg-lime-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors text-center"
+        >
+          View
+        </Link>
         <button
           onClick={handleDownload}
           className="flex-1 rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:border-lime-400 hover:text-lime-300 transition-colors"
