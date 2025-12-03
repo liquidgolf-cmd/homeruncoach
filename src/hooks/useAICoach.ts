@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Message, ModuleType, ModulePhase, Conversation } from '../types/module'
-import { getWarmupPrompt, getModuleQuestions } from '../utils/prompts'
-import { getModuleRole } from '../utils/coachingQualities'
+import { getModuleQuestions } from '../utils/prompts'
 import { generateReport } from '../utils/reportGenerator'
 import { saveReport } from '../utils/reportStorage'
 import { generateClaudeResponse, isAPIKeyConfigured } from '../api/claude'
@@ -48,16 +47,7 @@ export const useAICoach = ({ moduleType, conversationId, onPhaseChange, onComple
     }
     
     // Fallback to mock responses if API key not configured or API fails
-    const role = getModuleRole(moduleType)
     const questions = getModuleQuestions(moduleType)
-
-    if (currentPhase === 'warmup') {
-      return `Great! I'm your ${role}, and I'm here to help you through this module. Let's start with our first question:
-
-${questions[0]}
-
-Take your time with this—there's no rush.`
-    }
 
     if (currentPhase === 'questions') {
       const nextQ = questions[questionIndex + 1]
@@ -132,11 +122,7 @@ What would you like to change or refine?`
       setMessages(prev => [...prev, aiMessage])
 
       // Handle phase transitions
-      if (currentPhase === 'warmup') {
-        setCurrentPhase('questions')
-        setQuestionIndex(0)
-        onPhaseChange?.('questions')
-      } else if (currentPhase === 'questions') {
+      if (currentPhase === 'questions') {
         const questions = getModuleQuestions(moduleType)
         if (questionIndex < questions.length - 1) {
           setQuestionIndex(prev => prev + 1)
@@ -161,7 +147,8 @@ What would you like to change or refine?`
   }, [moduleType, currentPhase, questionIndex, messages, isLoading, onPhaseChange])
 
   const initializeConversation = useCallback(() => {
-    const warmupPrompt = getWarmupPrompt(moduleType)
+    const questions = getModuleQuestions(moduleType)
+    const firstQuestion = questions[0]
     
     const systemMessage: Message = {
       id: 'msg_system',
@@ -170,16 +157,16 @@ What would you like to change or refine?`
       timestamp: new Date().toISOString(),
     }
 
-    const welcomeMessage: Message = {
-      id: 'msg_welcome',
+    const firstQuestionMessage: Message = {
+      id: 'msg_first_question',
       role: 'assistant',
-      content: warmupPrompt,
+      content: firstQuestion,
       timestamp: new Date().toISOString(),
-      phase: 'warmup',
+      phase: 'questions',
     }
 
-    setMessages([systemMessage, welcomeMessage])
-    setCurrentPhase('warmup')
+    setMessages([systemMessage, firstQuestionMessage])
+    setCurrentPhase('questions')
     setQuestionIndex(0)
     setAnswers({})
   }, [moduleType])
