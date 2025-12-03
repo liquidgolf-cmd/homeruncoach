@@ -21,7 +21,7 @@ const Hero: React.FC = () => {
           </p>
           <div className="flex flex-wrap items-center gap-4" id="cta">
             <a
-              href="#how-it-works"
+              href="/signup"
               className="rounded-full bg-lime-400 px-6 py-2.5 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors"
             >
               Start with Story

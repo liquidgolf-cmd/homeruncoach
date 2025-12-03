@@ -28,7 +28,7 @@ const Navbar: React.FC = () => {
             FAQ
           </a>
           <a
-            href="#cta"
+            href="/signup"
             className="rounded-full bg-lime-400 px-4 py-2 text-slate-950 font-semibold hover:bg-lime-300 transition-colors"
           >
             Get Started
