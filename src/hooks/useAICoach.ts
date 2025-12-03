@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Message, ModuleType, ModulePhase, Conversation } from '../types/module'
-import { getModuleQuestions, getDraftPrompt } from '../utils/prompts'
+import { getModuleQuestions } from '../utils/prompts'
 import { generateReport } from '../utils/reportGenerator'
 import { saveReport } from '../utils/reportStorage'
 import { generateClaudeResponse, isAPIKeyConfigured } from '../api/claude'
@@ -27,14 +27,44 @@ export const useAICoach = ({ moduleType, conversationId, onPhaseChange, onComple
   const generateDraft = async (allMessages: Message[]): Promise<string> => {
     const hasAPIKey = isAPIKeyConfigured()
     
+    // Create a comprehensive draft request based on module type
+    const draftInstructions = {
+      story: `Based on our entire conversation, please create a comprehensive draft that includes:
+
+1. **Brand Story**: A clear, compelling narrative that explains why you're doing this business and what drives you
+2. **Ideal Client Profile**: A detailed description of your primary audience, including:
+   - Who they are (demographics, situation)
+   - What challenges they face daily
+   - What they secretly wish were true
+   - Where they hang out and who they trust
+
+Please synthesize all the information from our conversation into a well-structured, actionable draft. Make it specific and personal, not generic.`,
+      
+      solution: `Based on our entire conversation, please create a comprehensive draft that includes:
+
+1. **Value Proposition**: A clear statement of what you offer and why it matters
+2. **Offer Overview**: Details about your main offer including format, who it's for, and the main promise
+3. **Customer Journey Map**: The steps from "I saw you" to "I'm in" and beyond
+4. **Delivery Framework**: The 4-6 key steps that help a client go from A → B
+
+Please synthesize all the information from our conversation into a well-structured, actionable draft. Make it specific and practical.`,
+      
+      success: `Based on our entire conversation, please create a comprehensive draft that includes:
+
+1. **HomeRun Outcome Statement**: What success looks like for your ideal client 6-12 months after working with you
+2. **Success Metrics**: 3-5 tangible signs that show things are working, plus monthly tracking suggestions
+3. **90-Day Action Plan**: Realistic, actionable projects and tasks for the next 90 days
+
+Please synthesize all the information from our conversation into a well-structured, actionable draft. Make it specific and measurable.`
+    }
+    
     if (hasAPIKey) {
       try {
-        // Create a draft generation prompt
-        const draftPrompt = getDraftPrompt(moduleType, answers)
+        // Create a draft request message that uses the full conversation context
         const draftRequestMessage: Message = {
           id: `msg_draft_request_${Date.now()}`,
           role: 'user',
-          content: `${draftPrompt}\n\nPlease create a comprehensive draft based on all the answers provided. Structure it clearly and make it actionable.`,
+          content: `${draftInstructions[moduleType]}\n\nPlease review our entire conversation above and create this draft based on all the information shared.`,
           timestamp: new Date().toISOString(),
           phase: 'draft',
         }
@@ -45,14 +75,26 @@ export const useAICoach = ({ moduleType, conversationId, onPhaseChange, onComple
         return await generateClaudeResponse(draftMessages, moduleType, model)
       } catch (error) {
         console.error('Error generating draft:', error)
-        // Fall through to mock draft
+        // Fall through to fallback draft
       }
     }
     
-    // Fallback mock draft
+    // Fallback: Generate a basic draft from answers
+    const answerSummary = Object.entries(answers)
+      .map(([key, value]) => `Question ${key.replace('q', '')}: ${value}`)
+      .join('\n\n')
+    
     return `Here's a draft based on our conversation. Please review it and let me know what you'd like to adjust:
 
-[This is where the AI-generated draft would appear. In production, this would be generated using the answers collected during the questions phase.]
+---
+
+**Draft Summary:**
+
+${answerSummary}
+
+---
+
+This is a basic summary of your answers. For a more comprehensive draft, please configure your Claude API key in the .env file.
 
 What would you like to change or refine?`
   }
