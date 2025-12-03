@@ -47,12 +47,23 @@ Remember to stay in character as a ${role} and guide the user through the ${modu
 }
 
 /**
- * Generate AI response using Claude Sonnet 4 or 4.5
+ * Generate AI response using Claude API
  * 
- * Model names (verify at https://docs.anthropic.com/claude/docs/models-overview):
- * - claude-3-5-sonnet-20241022 (Sonnet 3.5)
- * - claude-sonnet-4-20250514 (Sonnet 4) - verify exact name
- * - claude-sonnet-4-5-20250514 (Sonnet 4.5) - verify exact name
+ * Official Anthropic Claude API Model Identifiers:
+ * 
+ * Sonnet 4.5 (Recommended):
+ *   - claude-sonnet-4-5 (alias, recommended)
+ *   - claude-sonnet-4-5-20250929 (full ID with date)
+ * 
+ * Haiku 4.5:
+ *   - claude-haiku-4-5 (alias)
+ *   - claude-haiku-4-5-20251001 (full ID)
+ * 
+ * Opus 4.5:
+ *   - claude-opus-4-5 (alias)
+ *   - claude-opus-4-5-20251101 (full ID)
+ * 
+ * Documentation: https://docs.anthropic.com/claude/docs/models-overview
  */
 export const generateClaudeResponse = async (
   messages: Message[],

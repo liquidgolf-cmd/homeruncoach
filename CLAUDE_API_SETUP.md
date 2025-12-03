@@ -41,12 +41,21 @@ VITE_CLAUDE_MODEL=claude-3-5-sonnet-20241022
 
 The app supports Claude Sonnet models. Check the [Anthropic Models Documentation](https://docs.anthropic.com/claude/docs/models-overview) for the latest model names.
 
-**Current recommended models:**
-- `claude-3-5-sonnet-20241022` - Sonnet 3.5 (default, widely available)
-- `claude-sonnet-4-20250514` - Sonnet 4 (verify exact name)
-- `claude-sonnet-4-5-20250514` - Sonnet 4.5 (verify exact name)
+**Official Anthropic Claude API Model Identifiers:**
 
-**Note:** Model names may change. Always verify the exact model identifier in Anthropic's documentation.
+**Sonnet 4.5 (Recommended):**
+- `claude-sonnet-4-5` - Alias (recommended)
+- `claude-sonnet-4-5-20250929` - Full ID with date
+
+**Haiku 4.5:**
+- `claude-haiku-4-5` - Alias
+- `claude-haiku-4-5-20251001` - Full ID with date
+
+**Opus 4.5:**
+- `claude-opus-4-5` - Alias
+- `claude-opus-4-5-20251101` - Full ID with date
+
+**Note:** Use the alias (without date) for automatic updates to the latest version. Use the full ID if you need to pin to a specific version.
 
 ### 4. Test the Setup
 
