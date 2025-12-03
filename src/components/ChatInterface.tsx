@@ -29,6 +29,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     scrollToBottom()
   }, [messages])
 
+  // Auto-focus input when AI finishes responding
+  useEffect(() => {
+    if (!isLoading && inputRef.current) {
+      // Small delay to ensure the message is rendered
+      const timer = setTimeout(() => {
+        inputRef.current?.focus()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [isLoading])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading || disabled) return
