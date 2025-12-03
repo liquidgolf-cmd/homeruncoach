@@ -86,6 +86,29 @@ src/
   - Quick start module selection
 - Session management (localStorage-based, ready for backend integration)
 
+### Phase 3: AI Coaching Module System ✅
+- Chat interface with MessageBubble and ChatInterface components
+- AI coaching system implementing all 8 coaching qualities:
+  - Act like you've built and led something
+  - Listen more than you talk
+  - Challenge without shaming
+  - Bring structure, not chaos
+  - Focus on the user
+  - Hold strong ethics and boundaries
+  - Measure success with the user
+  - Make user less dependent over time
+- 4-phase chat flow for each module:
+  - Warm-up & framing
+  - Guided questions
+  - AI-generated draft(s)
+  - Review & confirm
+- Module-specific prompts for Story, Solution, and Success
+- useAICoach hook for AI interactions
+- ModuleChat page with progress tracking and sidebar
+- Conversation storage utilities
+- Module-specific question flows
+- Progress indicators and phase tracking
+
 ## Next Steps
 
 - Phase 2: User Authentication & Dashboard
