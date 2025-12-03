@@ -36,6 +36,25 @@ npm run build
 
 The built files will be in the `dist/` directory.
 
+### Local Testing:
+
+**For development (uses root paths):**
+```bash
+npm run dev
+```
+
+**For testing production build locally:**
+```bash
+npm run build
+npm run preview:github
+```
+
+This will serve the production build with the correct base path for GitHub Pages.
+
+**Note:** If you see 404 errors for CSS/JS files:
+- Make sure you're using `npm run preview:github` (not just `npm run preview`)
+- Or access the deployed version at: `https://liquidgolf-cmd.github.io/homeruncoach/`
+
 ### Troubleshooting:
 
 - If deployment fails, check the Actions tab for error logs
