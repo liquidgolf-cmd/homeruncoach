@@ -6,6 +6,7 @@ import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
 import ModuleChat from './pages/ModuleChat'
 import ReportViewer from './pages/ReportViewer'
+import ActionPlan from './pages/ActionPlan'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -31,6 +32,14 @@ function App() {
           <Route
             path="/report/:reportId"
             element={<ReportViewer />}
+          />
+          <Route
+            path="/action-plan/:planId"
+            element={<ActionPlan />}
+          />
+          <Route
+            path="/action-plan/project/:projectId"
+            element={<ActionPlan />}
           />
         </Routes>
       </Router>

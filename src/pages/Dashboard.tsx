@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Report } from '../types/report'
-import { getReportsByProject } from '../utils/reportStorage'
+import { Report, BusinessActionPlan } from '../types/report'
+import { getReportsByProject, getBusinessActionPlanByProject } from '../utils/reportStorage'
+import { compileBusinessActionPlan } from '../utils/reportGenerator'
+import { saveBusinessActionPlan } from '../utils/reportStorage'
 import ReportCard from '../components/ReportCard'
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth()
   const [reports, setReports] = useState<Report[]>([])
+  const [actionPlan, setActionPlan] = useState<BusinessActionPlan | null>(null)
 
   // Mock data - will be replaced with real data from backend
   const projects = [
@@ -29,6 +32,22 @@ const Dashboard: React.FC = () => {
     projects.forEach(project => {
       const projectReports = getReportsByProject(project.id)
       allReports.push(...projectReports)
+      
+      // Check if all three modules are complete and compile action plan
+      const storyReport = projectReports.find(r => r.moduleType === 'story')
+      const solutionReport = projectReports.find(r => r.moduleType === 'solution')
+      const successReport = projectReports.find(r => r.moduleType === 'success')
+      
+      if (storyReport && solutionReport && successReport) {
+        // Check if plan already exists
+        let plan = getBusinessActionPlanByProject(project.id)
+        if (!plan) {
+          // Compile new plan
+          plan = compileBusinessActionPlan(storyReport, solutionReport, successReport, project.id)
+          saveBusinessActionPlan(plan)
+        }
+        setActionPlan(plan)
+      }
     })
     setReports(allReports)
   }, [])
@@ -189,6 +208,29 @@ const Dashboard: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Business Action Plan Section */}
+        {actionPlan && (
+          <div className="mb-8 rounded-2xl border-2 border-lime-400/30 bg-gradient-to-br from-slate-900/60 to-slate-800/40 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-semibold mb-1">Business Action Plan</h2>
+                <p className="text-sm text-slate-400">
+                  Complete plan compiled from all three modules
+                </p>
+              </div>
+              <Link
+                to={`/action-plan/${actionPlan.id}`}
+                className="rounded-full bg-lime-400 px-6 py-2.5 text-sm font-semibold text-slate-950 hover:bg-lime-300 transition-colors"
+              >
+                View Full Plan
+              </Link>
+            </div>
+            <p className="text-slate-300 text-sm">
+              {actionPlan.cover.overview}
+            </p>
+          </div>
+        )}
 
         {/* Reports Section */}
         {reports.length > 0 && (
