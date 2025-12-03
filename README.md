@@ -14,6 +14,7 @@ A full-stack web application that helps founders and business owners create clea
 ### Prerequisites
 
 - Node.js 18+ and npm/yarn/pnpm
+- Anthropic API key (get one at [console.anthropic.com](https://console.anthropic.com/))
 
 ### Installation
 
@@ -22,12 +23,36 @@ A full-stack web application that helps founders and business owners create clea
 npm install
 ```
 
-2. Start the development server:
+2. Set up environment variables:
+```bash
+# Copy the example env file
+cp .env.example .env
+
+# Edit .env and add your Anthropic API key
+VITE_ANTHROPIC_API_KEY=your_api_key_here
+VITE_CLAUDE_MODEL=claude-sonnet-4-20250514
+```
+
+3. Start the development server:
 ```bash
 npm run dev
 ```
 
-3. Open your browser and navigate to `http://localhost:5173`
+4. Open your browser and navigate to `http://localhost:5173`
+
+### Claude API Configuration
+
+The app uses Anthropic's Claude API (Sonnet 4 or 4.5) for AI coaching. 
+
+**Required:**
+- `VITE_ANTHROPIC_API_KEY`: Your Anthropic API key from [console.anthropic.com](https://console.anthropic.com/)
+
+**Optional:**
+- `VITE_CLAUDE_MODEL`: Choose between:
+  - `claude-sonnet-4-20250514` (default)
+  - `claude-sonnet-4-5-20250514`
+
+**Note:** If the API key is not configured, the app will fall back to mock responses for demonstration purposes.
 
 ### Build for Production
 

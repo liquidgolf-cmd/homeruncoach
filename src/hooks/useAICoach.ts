@@ -4,6 +4,7 @@ import { getWarmupPrompt, getModuleQuestions } from '../utils/prompts'
 import { getModuleRole } from '../utils/coachingQualities'
 import { generateReport } from '../utils/reportGenerator'
 import { saveReport } from '../utils/reportStorage'
+import { generateClaudeResponse, isAPIKeyConfigured } from '../api/claude'
 
 interface UseAICoachProps {
   moduleType: ModuleType
@@ -19,16 +20,37 @@ export const useAICoach = ({ moduleType, conversationId, onPhaseChange, onComple
   const [questionIndex, setQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
 
-  // Mock AI response - in production, this would call an actual API
-  const generateAIResponse = async (_userMessage: string): Promise<string> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000))
-
+  // Generate AI response using Claude API or fallback to mock
+  const generateAIResponse = async (userMessage: string): Promise<string> => {
+    const hasAPIKey = isAPIKeyConfigured()
+    
+    // If API key is configured, use Claude API
+    if (hasAPIKey) {
+      try {
+        // Get all messages including the new user message for context
+        const allMessages = [...messages, {
+          id: `msg_${Date.now()}`,
+          role: 'user' as const,
+          content: userMessage,
+          timestamp: new Date().toISOString(),
+          phase: currentPhase,
+        }]
+        
+        // Use model from environment variable or default to Sonnet 3.5
+        // Update to Sonnet 4/4.5 when available: claude-sonnet-4-20250514 or claude-sonnet-4-5-20250514
+        const model = import.meta.env.VITE_CLAUDE_MODEL || 'claude-3-5-sonnet-20241022'
+        
+        return await generateClaudeResponse(allMessages, moduleType, model)
+      } catch (error) {
+        console.error('Claude API error:', error)
+        // Fall through to mock response if API fails
+      }
+    }
+    
+    // Fallback to mock responses if API key not configured or API fails
     const role = getModuleRole(moduleType)
     const questions = getModuleQuestions(moduleType)
 
-    // Simple rule-based responses for demo
-    // In production, this would use OpenAI/Anthropic API with the system prompt
     if (currentPhase === 'warmup') {
       return `Great! I'm your ${role}, and I'm here to help you through this module. Let's start with our first question:
 
