@@ -46,10 +46,12 @@ npm run dev
 **For testing production build locally:**
 ```bash
 npm run build
-npm run preview:github
+npm run preview
 ```
 
-This will serve the production build with the correct base path for GitHub Pages.
+Then access: **http://localhost:4173/homeruncoach/**
+
+⚠️ **Important:** Make sure to include `/homeruncoach/` in the URL when testing locally!
 
 **Note:** If you see 404 errors for CSS/JS files:
 - Make sure you're using `npm run preview:github` (not just `npm run preview`)
