@@ -109,6 +109,23 @@ src/
 - Module-specific question flows
 - Progress indicators and phase tracking
 
+### Phase 4: Report Generation ✅
+- Report types and interfaces for all three modules
+- Report generation from completed conversations
+- ReportCard component for displaying reports
+- ReportViewer page with formatted report display
+- PDF/text export functionality (download and copy to clipboard)
+- Report storage and retrieval
+- Support for Story, Solution, and Success reports
+
+### Phase 5: Business Action Plan Compilation ✅
+- ActionPlan page for viewing compiled plans
+- Automatic plan compilation when all three modules complete
+- Combines Story, Solution, and Success into comprehensive plan
+- Export functionality for compiled plans
+- Dashboard integration showing Business Action Plan when ready
+- Support for viewing plans by ID or project ID
+
 ## Next Steps
 
 - Phase 2: User Authentication & Dashboard
