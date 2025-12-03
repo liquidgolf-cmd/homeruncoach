@@ -7,8 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "preview:github": "vite preview --base /homeruncoach/"
+    "preview": "node scripts/serve-preview.js",
+    "preview:vite": "vite preview --base /homeruncoach/",
+    "preview:root": "vite preview"
   },
   "dependencies": {
     "react": "^18.2.0",
