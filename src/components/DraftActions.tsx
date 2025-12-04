@@ -47,16 +47,25 @@ Document: ${moduleTitles[moduleType]}
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
 
-    // Format the content for better printing - preserve markdown-style headers
-    const formattedContent = draftContent
+    // Convert markdown-style formatting to HTML for better printing
+    let formattedContent = draftContent
+      // Convert headers
       .replace(/^## (.+)$/gm, '<h2>$1</h2>')
       .replace(/^### (.+)$/gm, '<h3>$1</h3>')
       .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
-      .replace(/^\*\*(.+?)\*\*/gm, '<strong>$1</strong>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/^(.+)$/gm, '<p>$1</p>')
-      .replace(/<p><h/g, '<h')
-      .replace(/<\/h([0-9])><p>/g, '</h$1>')
+      // Convert bold
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // Convert line breaks to paragraphs
+      .split('\n\n')
+      .map(para => {
+        // Don't wrap headers in paragraphs
+        if (para.trim().startsWith('<h') || para.trim().startsWith('##')) {
+          return para.trim().replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        }
+        // Wrap regular paragraphs
+        return `<p>${para.trim().replace(/\n/g, '<br>')}</p>`
+      })
+      .join('\n')
 
     printWindow.document.write(`
       <!DOCTYPE html>
