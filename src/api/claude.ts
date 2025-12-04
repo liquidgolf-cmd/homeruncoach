@@ -22,8 +22,12 @@ const getAnthropicClient = (): Anthropic => {
     console.warn('⚠️ API key format may be incorrect. Expected format: sk-ant-api03-...')
   }
   
+  // Note: dangerouslyAllowBrowser is required for browser usage
+  // SECURITY WARNING: This exposes your API key in the client bundle
+  // For production, consider using a backend proxy to protect your API key
   return new Anthropic({
     apiKey,
+    dangerouslyAllowBrowser: true, // Required for browser/client-side usage
   })
 }
 
