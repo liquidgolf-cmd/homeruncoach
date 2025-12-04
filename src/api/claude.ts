@@ -120,6 +120,18 @@ export const generateClaudeResponse = async (
  * Check if API key is configured
  */
 export const isAPIKeyConfigured = (): boolean => {
-  return !!import.meta.env.VITE_ANTHROPIC_API_KEY
+  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
+  const isConfigured = !!apiKey && apiKey.trim() !== '' && apiKey !== 'your_api_key_here'
+  
+  if (!isConfigured) {
+    console.warn('⚠️ API key check failed:', {
+      exists: !!apiKey,
+      isEmpty: !apiKey || apiKey.trim() === '',
+      isPlaceholder: apiKey === 'your_api_key_here',
+      allEnvVars: Object.keys(import.meta.env).filter(k => k.includes('API') || k.includes('CLAUDE'))
+    })
+  }
+  
+  return isConfigured
 }
 
