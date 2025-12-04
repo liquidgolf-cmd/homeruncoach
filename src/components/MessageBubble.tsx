@@ -1,13 +1,16 @@
 import React from 'react'
-import { Message } from '../types/module'
+import { Message, ModuleType } from '../types/module'
+import DraftActions from './DraftActions'
 
 interface MessageBubbleProps {
   message: Message
+  moduleType?: ModuleType
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, moduleType }) => {
   const isUser = message.role === 'user'
   const isSystem = message.role === 'system'
+  const isDraft = message.phase === 'draft' && !isUser
 
   if (isSystem) {
     return (
@@ -35,6 +38,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           }`}
         >
           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          {isDraft && moduleType && (
+            <DraftActions 
+              draftContent={message.content} 
+              moduleType={moduleType}
+            />
+          )}
         </div>
         <div className={`text-xs text-slate-500 mt-1 px-2 ${isUser ? 'text-right' : 'text-left'}`}>
           {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

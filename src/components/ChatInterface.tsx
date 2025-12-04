@@ -8,6 +8,7 @@ interface ChatInterfaceProps {
   isLoading?: boolean
   disabled?: boolean
   placeholder?: string
+  moduleType?: 'story' | 'solution' | 'success'
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -16,6 +17,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   isLoading = false,
   disabled = false,
   placeholder = 'Type your message...',
+  moduleType,
 }) => {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -76,7 +78,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <p>Start the conversation by saying hello!</p>
           </div>
         ) : (
-          messages.map((message) => <MessageBubble key={message.id} message={message} />)
+          messages.map((message) => (
+            <MessageBubble 
+              key={message.id} 
+              message={message} 
+              moduleType={moduleType}
+            />
+          ))
         )}
         {isLoading && (
           <div className="flex justify-start mb-4">
