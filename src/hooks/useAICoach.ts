@@ -28,16 +28,28 @@ export const useAICoach = ({ moduleType, conversationId, onPhaseChange, onComple
     
     // Create a comprehensive draft request based on module type
     const draftInstructions = {
-      story: `Based on our entire conversation, please create a comprehensive draft that includes:
+      story: `Based on our entire conversation, please create a comprehensive draft document that includes:
 
-1. **Brand Story**: A clear, compelling narrative that explains why you're doing this business and what drives you
-2. **Ideal Client Profile**: A detailed description of your primary audience, including:
-   - Who they are (demographics, situation)
-   - What challenges they face daily
-   - What they secretly wish were true
-   - Where they hang out and who they trust
+## BRAND STORY
+A clear, compelling narrative (2-4 paragraphs) that explains:
+- Why you're doing this business and what drives you
+- Your personal story and what led you here
+- What you believe and how that drives everything you do
 
-Please synthesize all the information from our conversation into a well-structured, actionable draft. Make it specific and personal, not generic.`,
+## IDEAL CLIENT PROFILE
+A detailed description of your primary audience, including:
+- **Who they are**: Demographics, situation, and context
+- **What challenges they face**: Daily struggles and frustrations
+- **What they desire**: What they secretly wish were true 6-12 months from now
+- **Where they are**: Where they hang out (online/offline) and who they already trust
+
+## CORE MESSAGE
+A clear, concise statement (1-2 sentences) that captures:
+- What you do
+- Who you serve
+- The transformation you help them achieve
+
+Format this as a professional document with clear section headers. Make it specific and personal, not generic. Do NOT include "next steps" or action items - focus only on the Brand Story, Ideal Client Profile, and Core Message.`,
       
       solution: `Based on our entire conversation, please create a comprehensive draft that includes:
 

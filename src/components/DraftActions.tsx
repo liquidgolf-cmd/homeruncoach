@@ -13,9 +13,26 @@ const DraftActions: React.FC<DraftActionsProps> = ({ draftContent, moduleType, o
       solution: 'Solution',
       success: 'Success',
     }
+    const moduleTitles = {
+      story: 'Brand Story, Ideal Client Profile & Core Message',
+      solution: 'Value Proposition, Offer & Customer Journey',
+      success: 'Success Outcomes, Metrics & Action Plan',
+    }
     const filename = `${moduleNames[moduleType]}-Draft-${new Date().toISOString().split('T')[0]}.txt`
     
-    const blob = new Blob([draftContent], { type: 'text/plain' })
+    // Format content with clear headers for download
+    const formattedContent = `HOME RUN COACH AI - ${moduleNames[moduleType]} MODULE DRAFT
+Generated: ${new Date().toLocaleDateString()}
+
+${'='.repeat(60)}
+
+${draftContent}
+
+${'='.repeat(60)}
+Document: ${moduleTitles[moduleType]}
+`
+    
+    const blob = new Blob([formattedContent], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -29,6 +46,17 @@ const DraftActions: React.FC<DraftActionsProps> = ({ draftContent, moduleType, o
   const handlePrint = () => {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
+
+    // Format the content for better printing - preserve markdown-style headers
+    const formattedContent = draftContent
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+      .replace(/^\*\*(.+?)\*\*/gm, '<strong>$1</strong>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/^(.+)$/gm, '<p>$1</p>')
+      .replace(/<p><h/g, '<h')
+      .replace(/<\/h([0-9])><p>/g, '</h$1>')
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -44,18 +72,39 @@ const DraftActions: React.FC<DraftActionsProps> = ({ draftContent, moduleType, o
               line-height: 1.6;
               color: #333;
             }
+            h1 {
+              font-size: 24px;
+              margin-bottom: 30px;
+              border-bottom: 2px solid #333;
+              padding-bottom: 10px;
+            }
+            h2 {
+              font-size: 20px;
+              margin-top: 30px;
+              margin-bottom: 15px;
+              color: #000;
+            }
+            h3 {
+              font-size: 18px;
+              margin-top: 20px;
+              margin-bottom: 10px;
+            }
+            p {
+              margin-bottom: 12px;
+            }
             pre {
               white-space: pre-wrap;
               word-wrap: break-word;
             }
             @media print {
               body { margin: 0; padding: 20px; }
+              h2 { page-break-after: avoid; }
             }
           </style>
         </head>
         <body>
           <h1>${moduleType.charAt(0).toUpperCase() + moduleType.slice(1)} Module Draft</h1>
-          <pre>${draftContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+          <div>${formattedContent}</div>
         </body>
       </html>
     `)
