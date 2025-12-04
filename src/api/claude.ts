@@ -1,7 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { Message } from '../types/module'
-import { COACHING_SYSTEM_PROMPT } from '../utils/coachingQualities'
-import { getModuleRole, getModuleDescription } from '../utils/coachingQualities'
+import { getModuleSystemPrompt } from '../utils/coachingQualities'
 import { ModuleType } from '../types/module'
 
 // Initialize Anthropic client
@@ -38,23 +37,6 @@ const convertMessages = (messages: Message[]): Anthropic.MessageParam[] => {
       role: msg.role === 'user' ? 'user' : 'assistant',
       content: msg.content,
     }))
-}
-
-/**
- * Get the system prompt for a specific module
- */
-const getModuleSystemPrompt = (moduleType: ModuleType): string => {
-  const role = getModuleRole(moduleType)
-  const description = getModuleDescription(moduleType)
-  
-  return `${COACHING_SYSTEM_PROMPT}
-
-## Current Module Context:
-- Module: ${moduleType}
-- Your Role: ${role}
-- Module Focus: ${description}
-
-Remember to stay in character as a ${role} and guide the user through the ${moduleType} module using the Story / Solution / Success framework.`
 }
 
 /**

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Message, ModuleType, ModulePhase, Conversation } from '../types/module'
-import { getModuleQuestions } from '../utils/prompts'
+import { getModuleRole, getModuleDescription } from '../utils/coachingQualities'
 import { generateReport } from '../utils/reportGenerator'
 import { saveReport } from '../utils/reportStorage'
 import { generateClaudeResponse, isAPIKeyConfigured } from '../api/claude'
@@ -15,9 +15,8 @@ interface UseAICoachProps {
 
 export const useAICoach = ({ moduleType, conversationId, onPhaseChange, onComplete }: UseAICoachProps) => {
   const [messages, setMessages] = useState<Message[]>([])
-  const [currentPhase, setCurrentPhase] = useState<ModulePhase>('warmup')
+  const [currentPhase, setCurrentPhase] = useState<ModulePhase>('questions')
   const [isLoading, setIsLoading] = useState(false)
-  const [questionIndex, setQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   
   // Mock project ID - in production, get from route or context
@@ -142,28 +141,14 @@ What would you like to change or refine?`
     }
     
     // Fallback to mock responses if API key not configured or API fails
-    const questions = getModuleQuestions(moduleType)
-
     if (currentPhase === 'questions') {
-      const nextQ = questions[questionIndex + 1]
-
-      // Natural, conversational transitions
-      const transitions = [
-        'Got it.',
-        'That makes sense.',
-        'I see.',
-        'Helpful context.',
-        'Thanks for sharing that.',
-        'Understood.',
-      ]
-      const transition = transitions[Math.floor(Math.random() * transitions.length)]
-
-      if (nextQ) {
-        return `${transition}\n\n${nextQ}`
-      } else {
-        // Move to draft phase
-        return `${transition}\n\nPerfect! I have everything I need. Let me pull together a draft based on what you've shared...`
+      // In mock mode, just acknowledge and ask a follow-up
+      const followUps = {
+        story: "That's helpful. Can you tell me more about what drives you to do this work?",
+        solution: "Got it. What do you think your ideal client really needs, even if they can't articulate it yet?",
+        success: "I see. What would make your ideal client say this was an absolute home run?",
       }
+      return followUps[moduleType]
     }
 
     if (currentPhase === 'draft') {
@@ -196,10 +181,10 @@ What would you like to change or refine?`
     setMessages(prev => [...prev, userMessage])
     setIsLoading(true)
 
-    // Update answers if in questions phase
+    // Store user answers for report generation
     if (currentPhase === 'questions') {
-      const questionKey = `q${questionIndex}`
-      setAnswers(prev => ({ ...prev, [questionKey]: content }))
+      const answerKey = `answer_${Date.now()}`
+      setAnswers(prev => ({ ...prev, [answerKey]: content }))
     }
 
     try {
@@ -225,13 +210,13 @@ What would you like to change or refine?`
           projectId,
           messages: updatedMessages,
           currentPhase,
-          phaseData: {
-            questions: currentPhase === 'questions' ? {
-              currentQuestionIndex: questionIndex,
-              answers,
-              completed: false,
-            } : undefined,
-          },
+                phaseData: {
+                  questions: currentPhase === 'questions' ? {
+                    currentQuestionIndex: 0,
+                    answers,
+                    completed: false,
+                  } : undefined,
+                },
           completed: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -239,17 +224,30 @@ What would you like to change or refine?`
         saveConversation(conversation)
       }
 
+      // Check if AI response indicates transition to draft phase
+      // The AI will say something like "I have enough information" or "Let me create a draft"
+      const draftIndicators = [
+        'i have enough information',
+        'let me create a draft',
+        'let me pull together',
+        'let me synthesize',
+        'i\'ll create a draft',
+        'let me draft',
+        'creating a draft',
+      ]
+      
+      const shouldTransitionToDraft = draftIndicators.some(indicator => 
+        aiResponse.toLowerCase().includes(indicator)
+      )
+      
       // Handle phase transitions
-      if (currentPhase === 'questions') {
-        const questions = getModuleQuestions(moduleType)
-        if (questionIndex < questions.length - 1) {
-          setQuestionIndex(prev => prev + 1)
-        } else {
-          // All questions answered - generate draft
-          setCurrentPhase('draft')
-          onPhaseChange?.('draft')
-          
-          // Generate draft
+      if (currentPhase === 'questions' && shouldTransitionToDraft) {
+        // AI has indicated it's ready to create the draft
+        setCurrentPhase('draft')
+        onPhaseChange?.('draft')
+        
+        // Generate draft (if not already included in response)
+        if (!aiResponse.toLowerCase().includes('draft')) {
           setIsLoading(true)
           try {
             const draftContent = await generateDraft(updatedMessages)
@@ -272,7 +270,7 @@ What would you like to change or refine?`
                 currentPhase: 'draft',
                 phaseData: {
                   questions: {
-                    currentQuestionIndex: questionIndex,
+                    currentQuestionIndex: 0,
                     answers,
                     completed: true,
                   },
@@ -287,6 +285,28 @@ What would you like to change or refine?`
             console.error('Error generating draft:', error)
           } finally {
             setIsLoading(false)
+          }
+        } else {
+          // Draft is already in the response, just save conversation
+          if (conversationId) {
+            const conversation: Conversation = {
+              id: conversationId,
+              moduleType,
+              projectId,
+              messages: updatedMessages,
+              currentPhase: 'draft',
+              phaseData: {
+                questions: {
+                  currentQuestionIndex: 0,
+                  answers,
+                  completed: true,
+                },
+              },
+              completed: false,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
+            saveConversation(conversation)
           }
         }
       }
@@ -303,11 +323,32 @@ What would you like to change or refine?`
     } finally {
       setIsLoading(false)
     }
-    }, [moduleType, currentPhase, questionIndex, messages, isLoading, onPhaseChange, conversationId, projectId, answers])
+    }, [moduleType, currentPhase, messages, isLoading, onPhaseChange, conversationId, projectId, answers])
 
   const initializeConversation = useCallback(() => {
-    const questions = getModuleQuestions(moduleType)
-    const firstQuestion = questions[0]
+    const role = getModuleRole(moduleType)
+    const description = getModuleDescription(moduleType)
+    
+    // Create an opening message that invites conversation
+    const openingMessages = {
+      story: `I'm your ${role}. Let's clarify your story: why you're doing this and who it's for. 
+
+${description}
+
+What's the deeper reason you're doing this business or project?`,
+      
+      solution: `I'm your ${role}. Let's design your solution: what you offer and how it helps your people win.
+
+${description}
+
+In your own words, what does your ideal client say they want?`,
+      
+      success: `I'm your ${role}. Let's define what success looks like—for your clients and for you.
+
+${description}
+
+Imagine your ideal client 6-12 months after working with you. What's different in their life or work?`,
+    }
     
     const systemMessage: Message = {
       id: 'msg_system',
@@ -316,17 +357,16 @@ What would you like to change or refine?`
       timestamp: new Date().toISOString(),
     }
 
-    const firstQuestionMessage: Message = {
-      id: 'msg_first_question',
+    const openingMessage: Message = {
+      id: 'msg_opening',
       role: 'assistant',
-      content: firstQuestion,
+      content: openingMessages[moduleType],
       timestamp: new Date().toISOString(),
       phase: 'questions',
     }
 
-    setMessages([systemMessage, firstQuestionMessage])
+    setMessages([systemMessage, openingMessage])
     setCurrentPhase('questions')
-    setQuestionIndex(0)
     setAnswers({})
   }, [moduleType])
 
@@ -343,7 +383,7 @@ What would you like to change or refine?`
       currentPhase: 'review',
       phaseData: {
         questions: {
-          currentQuestionIndex: questionIndex,
+          currentQuestionIndex: 0,
           answers,
           completed: true,
         },
@@ -357,7 +397,7 @@ What would you like to change or refine?`
     saveReport(report)
     
     onComplete?.()
-  }, [conversationId, moduleType, messages, questionIndex, answers, onPhaseChange, onComplete])
+  }, [conversationId, moduleType, messages, answers, onPhaseChange, onComplete])
 
   return {
     messages,
