@@ -9,6 +9,7 @@ interface ChatInterfaceProps {
   disabled?: boolean
   placeholder?: string
   moduleType?: 'story' | 'solution' | 'success'
+  projectId?: string
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -18,6 +19,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   disabled = false,
   placeholder = 'Type your message...',
   moduleType,
+  projectId,
 }) => {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -83,6 +85,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               key={message.id} 
               message={message} 
               moduleType={moduleType}
+              projectId={projectId}
             />
           ))
         )}

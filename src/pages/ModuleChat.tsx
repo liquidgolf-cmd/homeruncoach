@@ -157,6 +157,7 @@ const ModuleChat: React.FC = () => {
               isLoading={isLoading}
               disabled={currentPhase === 'review'}
               moduleType={currentModule}
+              projectId={projectId}
               placeholder={
                 currentPhase === 'review'
                   ? 'Module complete! Return to dashboard to view your report.'

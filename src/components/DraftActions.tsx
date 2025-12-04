@@ -1,12 +1,14 @@
 import React from 'react'
+import { saveDraftToProfile } from '../utils/profileStorage'
 
 interface DraftActionsProps {
   draftContent: string
   moduleType: 'story' | 'solution' | 'success'
+  projectId?: string
   onSave?: () => void
 }
 
-const DraftActions: React.FC<DraftActionsProps> = ({ draftContent, moduleType, onSave }) => {
+const DraftActions: React.FC<DraftActionsProps> = ({ draftContent, moduleType, projectId, onSave }) => {
   const handleDownload = () => {
     const moduleNames = {
       story: 'Story',
@@ -128,15 +130,14 @@ Document: ${moduleTitles[moduleType]}
   const handleSave = () => {
     if (onSave) {
       onSave()
+    }
+    
+    // Always save to user profile
+    const draft = saveDraftToProfile(moduleType, draftContent, projectId)
+    if (draft) {
+      alert('Draft saved to your profile!')
     } else {
-      // Default: save to localStorage
-      const draftKey = `homeruncoach_draft_${moduleType}_${Date.now()}`
-      localStorage.setItem(draftKey, JSON.stringify({
-        content: draftContent,
-        moduleType,
-        savedAt: new Date().toISOString(),
-      }))
-      alert('Draft saved!')
+      alert('Please log in to save drafts to your profile.')
     }
   }
 

@@ -5,9 +5,10 @@ import DraftActions from './DraftActions'
 interface MessageBubbleProps {
   message: Message
   moduleType?: ModuleType
+  projectId?: string
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, moduleType }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, moduleType, projectId }) => {
   const isUser = message.role === 'user'
   const isSystem = message.role === 'system'
   const isDraft = message.phase === 'draft' && !isUser
@@ -42,6 +43,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, moduleType }) =>
             <DraftActions 
               draftContent={message.content} 
               moduleType={moduleType}
+              projectId={projectId}
             />
           )}
         </div>

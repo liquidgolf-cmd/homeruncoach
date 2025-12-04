@@ -8,12 +8,14 @@ import { saveBusinessActionPlan } from '../utils/reportStorage'
 import ReportCard from '../components/ReportCard'
 import { getAllConversations } from '../utils/conversationStorage'
 import { Conversation } from '../types/module'
+import { getUserDrafts, UserDraft } from '../utils/profileStorage'
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth()
   const [reports, setReports] = useState<Report[]>([])
   const [actionPlan, setActionPlan] = useState<BusinessActionPlan | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([])
+  const [savedDrafts, setSavedDrafts] = useState<UserDraft[]>([])
 
   // Mock project - in production, get from backend
   const projectId = 'project_1'
@@ -47,6 +49,10 @@ const Dashboard: React.FC = () => {
     // Load conversations
     const allConversations = getAllConversations(projectId)
     setConversations(allConversations)
+    
+    // Load saved drafts from user profile
+    const drafts = getUserDrafts()
+    setSavedDrafts(drafts)
   }, [])
 
   // Determine module completion based on actual reports
@@ -225,6 +231,65 @@ const Dashboard: React.FC = () => {
             <p className="text-slate-300 text-sm">
               {actionPlan.cover.overview}
             </p>
+          </div>
+        )}
+
+        {/* Saved Drafts Section */}
+        {savedDrafts.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold">Your Saved Drafts</h2>
+              <span className="text-sm text-slate-400">{savedDrafts.length} saved</span>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {savedDrafts.map((draft) => {
+                const moduleNames = {
+                  story: 'Story',
+                  solution: 'Solution',
+                  success: 'Success',
+                }
+                const preview = draft.content.substring(0, 150) + (draft.content.length > 150 ? '...' : '')
+                
+                return (
+                  <div
+                    key={draft.id}
+                    className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="text-sm font-semibold text-lime-300 mb-1">
+                          {moduleNames[draft.moduleType]} Draft
+                        </h3>
+                        <p className="text-xs text-slate-400 line-clamp-2">
+                          {preview}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-slate-500 mt-2 mb-3">
+                      Saved {new Date(draft.savedAt).toLocaleDateString()}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          const blob = new Blob([draft.content], { type: 'text/plain' })
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = url
+                          a.download = `${moduleNames[draft.moduleType]}-Draft-${new Date(draft.savedAt).toISOString().split('T')[0]}.txt`
+                          document.body.appendChild(a)
+                          a.click()
+                          document.body.removeChild(a)
+                          URL.revokeObjectURL(url)
+                        }}
+                        className="flex-1 rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-lime-400 hover:text-lime-300 transition-colors"
+                      >
+                        Download
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 
