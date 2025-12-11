@@ -73,10 +73,11 @@ export const initializeGoogleSignIn = (
 // Trigger Google Sign-In
 export const triggerGoogleSignIn = () => {
   if (window.google?.accounts?.id) {
-    window.google.accounts.id.prompt((notification: any) => {
+    const googleAccounts = window.google.accounts.id
+    googleAccounts.prompt((notification: any) => {
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
         // Fallback to one-tap sign-in button
-        window.google.accounts.id.renderButton(
+        googleAccounts.renderButton(
           document.getElementById('google-signin-button') as HTMLElement,
           {
             theme: 'outline',
