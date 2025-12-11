@@ -28,9 +28,10 @@ npm install
 # Copy the example env file
 cp .env.example .env
 
-# Edit .env and add your Anthropic API key
+# Edit .env and add your API keys
 VITE_ANTHROPIC_API_KEY=your_api_key_here
 VITE_CLAUDE_MODEL=claude-sonnet-4-20250514
+VITE_GOOGLE_CLIENT_ID=your-google-client-id-here
 ```
 
 3. Start the development server:
@@ -53,6 +54,25 @@ The app uses Anthropic's Claude API (Sonnet 4 or 4.5) for AI coaching.
   - `claude-sonnet-4-5-20250514`
 
 **Note:** If the API key is not configured, the app will fall back to mock responses for demonstration purposes.
+
+### Google Sign-In Configuration
+
+The app supports Google Sign-In for easy authentication.
+
+**Required:**
+- `VITE_GOOGLE_CLIENT_ID`: Your Google OAuth 2.0 Client ID from [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+
+**Setup Steps:**
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google+ API (or Google Identity Services)
+4. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
+5. Choose "Web application" as the application type
+6. Add your authorized JavaScript origins (e.g., `http://localhost:5173` for development)
+7. Add your authorized redirect URIs
+8. Copy the Client ID and add it to your `.env` file as `VITE_GOOGLE_CLIENT_ID`
+
+**Note:** If the Google Client ID is not configured, the Google Sign-In button will not be displayed, and users can still sign in with email/password.
 
 ### Build for Production
 
@@ -102,6 +122,7 @@ src/
 
 ### Phase 2: Authentication & Dashboard ✅
 - User authentication system (login/signup)
+- Google Sign-In integration
 - AuthContext for state management
 - Protected routes
 - User dashboard with:

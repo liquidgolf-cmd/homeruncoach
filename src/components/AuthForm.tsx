@@ -1,18 +1,21 @@
-import React, { useState, FormEvent } from 'react'
+import React, { useState, FormEvent, useEffect, useRef } from 'react'
 import { LoginCredentials, SignupCredentials } from '../types/auth'
+import { renderGoogleButton, initializeGoogleSignIn, GoogleUser } from '../utils/googleAuth'
 
 interface AuthFormProps {
   mode: 'login' | 'signup'
   onSubmit: (credentials: LoginCredentials | SignupCredentials) => Promise<void>
+  onGoogleSignIn?: (googleUser: GoogleUser) => Promise<void>
   isLoading?: boolean
   error?: string | null
 }
 
-const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit, isLoading = false, error }) => {
+const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit, onGoogleSignIn, isLoading = false, error }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
+  const googleButtonRef = useRef<HTMLDivElement>(null)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -39,10 +42,49 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit, isLoading = false, 
     }
   }
 
+  useEffect(() => {
+    if (onGoogleSignIn && googleButtonRef.current) {
+      // Initialize Google Sign-In
+      initializeGoogleSignIn(
+        async (googleUser) => {
+          setLocalError(null)
+          try {
+            await onGoogleSignIn(googleUser)
+          } catch (err: any) {
+            setLocalError(err.message || 'Failed to sign in with Google. Please try again.')
+          }
+        },
+        (errorMessage) => {
+          setLocalError(errorMessage)
+        }
+      )
+
+      // Render Google button
+      const buttonId = `google-signin-button-${mode}`
+      googleButtonRef.current.id = buttonId
+      renderGoogleButton(buttonId)
+    }
+  }, [mode, onGoogleSignIn])
+
   const displayError = error || localError
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-4">
+      {onGoogleSignIn && (
+        <>
+          <div ref={googleButtonRef} className="w-full"></div>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-slate-900/60 text-slate-400">Or continue with email</span>
+            </div>
+          </div>
+        </>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
       {mode === 'signup' && (
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1">
@@ -104,6 +146,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit, isLoading = false, 
         {isLoading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}
       </button>
     </form>
+    </div>
   )
 }
 

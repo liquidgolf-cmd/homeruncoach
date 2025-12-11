@@ -5,7 +5,7 @@ import AuthForm from '../components/AuthForm'
 import { LoginCredentials } from '../types/auth'
 
 const Login: React.FC = () => {
-  const { login, isLoading } = useAuth()
+  const { login, signInWithGoogle, isLoading } = useAuth()
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
 
@@ -19,6 +19,16 @@ const Login: React.FC = () => {
     }
   }
 
+  const handleGoogleSignIn = async (googleUser: any) => {
+    setError(null)
+    try {
+      await signInWithGoogle(googleUser)
+      navigate('/dashboard')
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign in with Google. Please try again.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -28,7 +38,13 @@ const Login: React.FC = () => {
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8">
-          <AuthForm mode="login" onSubmit={handleLogin} isLoading={isLoading} error={error} />
+          <AuthForm 
+            mode="login" 
+            onSubmit={handleLogin} 
+            onGoogleSignIn={handleGoogleSignIn}
+            isLoading={isLoading} 
+            error={error} 
+          />
 
           <div className="mt-6 text-center text-sm text-slate-400">
             Don&apos;t have an account?{' '}
